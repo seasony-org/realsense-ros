@@ -18,6 +18,8 @@ For testing purposes, you shall clone the repo below in your /seasony workspace.
 
 [https://github.com/seasony-org/realsense-ros.git](https://github.com/seasony-org/realsense-ros.git) 
 
+For more detailed info go to [https://github.com/seasony-org/realsense-ros/blob/foxy/src/README.md](https://github.com/seasony-org/realsense-ros/blob/foxy/src/README.md) 
+
 Once everything is installed, you may run 
 
 ```bash
