@@ -39,12 +39,12 @@ This version supports ROS2 foxy on Ubuntu 20.04.
    ### Step 3: Install Intel&reg; RealSense&trade; ROS2 wrapper from Sources
    - Go to your /seasony workspace
    ```bash
-   cd ~/seasony/src/
+   cd ~/seasony
    ```
    - Clone the latest Foxy Intel&reg; RealSense&trade;  wrapper from [here](https://github.com/IntelRealSense/realsense-ros.git) into '~/ros2_ws/src/'
    ```bashrc
    git clone https://github.com/IntelRealSense/realsense-ros.git -b foxy
-   cd ~/ros2_ws
+   cd ~/seasony
    ```
 
   ### Step 4: Install dependencies:
@@ -57,6 +57,7 @@ This version supports ROS2 foxy on Ubuntu 20.04.
 
   ### Step 5: Build:
   ```bash
+  cd ~/seasony/realsense-ros
   colcon build
   ```
 
