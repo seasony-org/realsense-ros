@@ -20,6 +20,9 @@ For testing purposes, you shall clone the repo below in your /seasony workspace.
 
 For more detailed info go to [https://github.com/seasony-org/realsense-ros/blob/foxy/src/README.md](https://github.com/seasony-org/realsense-ros/blob/foxy/src/README.md) 
 
+
+
+
 ---------------------------------- Extra info but not official ----------------------------------
 
 Once everything is installed, you may run 
