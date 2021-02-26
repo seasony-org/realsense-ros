@@ -43,7 +43,7 @@ This version supports ROS2 foxy on Ubuntu 20.04.
    ```
    - Clone the latest Foxy Intel&reg; RealSense&trade;  wrapper from [here](https://github.com/IntelRealSense/realsense-ros.git) into '~/ros2_ws/src/'
    ```bashrc
-   git clone https://github.com/IntelRealSense/realsense-ros.git -b foxy
+   git clone https://github.com/seasony-org/realsense-ros.git -b foxy
    cd ~/seasony
    ```
 
