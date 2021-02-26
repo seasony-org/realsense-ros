@@ -14,7 +14,7 @@ Go to the src directory for the main README file.
 
 Below you may find the official maintained repository for the realsense camera. Just follow the instructions on the readme file to install the ROS wrapper of the SDK. 
 
-For testing purposes, you shall create a ros2 workspace and then clone the repo below. Remember to switch to the right branch -> foxy 
+For testing purposes, you shall clone the repo below in your /seasony workspace. Remember to switch to the right branch -> foxy 
 
 [https://github.com/seasony-org/realsense-ros.git](https://github.com/seasony-org/realsense-ros.git) 
 
