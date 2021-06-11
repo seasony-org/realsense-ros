@@ -1,8 +1,8 @@
 # realsense-ros
 Intel(R) RealSense(TM) ROS Wrapper for D400 series, SR300 Camera and T265 Tracking Module
 
-Go to the src directory for the main README file.
 
+Go to the src directory for the main README file.
 
 
 # Realsense D435i
@@ -15,6 +15,7 @@ Go to the src directory for the main README file.
 For more detailed info go to [https://github.com/seasony-org/realsense-ros/blob/ros2/src/README.md](https://github.com/seasony-org/realsense-ros/blob/ros2/src/README.md) 
 
 LibRealSense supported version: v2.45.0 (see [realsense2_camera release notes](https://github.com/IntelRealSense/realsense-ros/releases))
+
 
 ## Installation Instructions
 This version supports ROS2 Dashing, Eloquent and Foxy.
@@ -46,7 +47,6 @@ This version supports ROS2 Dashing, Eloquent and Foxy.
 
 
    ### Step 1: Install the latest Intel&reg; RealSense&trade; SDK 2.0
-
 
    ### Install the latest Intel&reg; RealSense&trade; SDK 2.0
    - #### Install from [Debian Package](https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md#installing-the-packages) - In that case treat yourself as a developer. Make sure you follow the instructions to also install librealsense2-dev and librealsense-dkms packages.
@@ -80,32 +80,6 @@ This version supports ROS2 Dashing, Eloquent and Foxy.
   ```bash
   colcon build
   ```
-
----------------------------------- Extra info but not official ----------------------------------
-
-Once everything is installed, you may run 
-
-```bash
-ros2 launch realsense2_camera rs_launch.py enable_pointcloud:=true
-```
-
-Or  
-```bash
-ros2 launch realsense2_camera rs_launch.py enable_accel:=true enable_gyro:=true
-```
-
-For setting up the different parameters please check the link above for further information about the parameters available. 
-
-## RVIZ 
-
-If you want to visualize the camera output on RVIZ you should run this command: 
-
-```bash
-rviz2 -d ros2_realsense_ws/src/realsense-ros/realsense2_camera/launch/default.rviz
-```
-
-You will notice that the Images are not displayed. This is due to the fact that the default.rviz settings are not correct. More specifically, the image subscribers created by rviz do not have the right Quality of Service settings (https://index.ros.org/doc/ros2/Concepts/About-Quality-of-Service-Settings/ ) 
-
 
 This will stream all camera sensors and publish on the appropriate ROS topics.
 
@@ -208,8 +182,42 @@ Setting *unite_imu_method* creates a new topic, *imu*, that replaces the default
 ### Start the camera node
 To start the camera node in ROS:
 
+Once everything is installed, you may run 
+
+```bash
+ros2 launch realsense2_camera rs_launch.py enable_pointcloud:=true
+```
+Or  
+```bash
+ros2 launch realsense2_camera rs_launch.py enable_accel:=true enable_gyro:=true
+```
+
+For setting up the different parameters please check the link above for further information about the parameters available. 
+
+Then, unit-tests can be run using the following command (use either python or python3):
+```bash
+cd ros2_ws
+wget "https://librealsense.intel.com/rs-tests/TestData/outdoors_1color.bag" -P "records/"
+wget "https://librealsense.intel.com/rs-tests/D435i_Depth_and_IMU_Stands_still.bag" -P "records/"
+```
+
+```bash
+python3 src/realsense-ros/realsense2_camera/scripts/rs2_test.py --all
+```
+
+## RVIZ 
+
+If you want to visualize the camera output on RVIZ you should run this command: 
+
+```bash
+rviz2 -d ros2_realsense_ws/src/realsense-ros/realsense2_camera/launch/default.rviz
+```
+
+You will notice that the Images are not displayed. This is due to the fact that the default.rviz settings are not correct. More specifically, the image subscribers created by rviz do not have the right Quality of Service settings (https://index.ros.org/doc/ros2/Concepts/About-Quality-of-Service-Settings/ ) 
+
 
  You may check the topic’s QoS profile by entering this command in your terminal:  
+
 ```bash
 ros2 topic info <topic-name> --verbose 
 ```
@@ -249,6 +257,7 @@ QoS profile:
   Liveliness: RMW_QOS_POLICY_LIVELINESS_AUTOMATIC 
 
   Liveliness lease duration: 2147483651294967295 nanoseconds
+
 ```
 
 As you may see, the reliability of this publisher is set to _best_effort_  and the durability to _volatile_. You should change these settings in rviz to match them. To do that, on the Displays panel, go to each Image item. Click on the topic flied and there you could see the current settings. Update these settings to a [compatible](https://index.ros.org/doc/ros2/Concepts/About-Quality-of-Service-Settings/#qos-compatibilities) subscriber/publisher.
