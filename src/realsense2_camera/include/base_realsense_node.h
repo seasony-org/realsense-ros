@@ -7,14 +7,16 @@
 
 #include <librealsense2/rs.hpp>
 #include <librealsense2/rsutil.h>
-#include "realsense2_camera/constants.h"
+#include "constants.h"
+#include "dynamic_params.h"
 #include <cv_bridge/cv_bridge.h>
 
-#include <diagnostic_updater/diagnostic_updater.hpp>
-#include <diagnostic_updater/update_functions.hpp>
-#include <diagnostic_updater/publisher.hpp>
 // #include <nav_msgs/Odometry.h>
+#if defined(DASHING) || defined(ELOQUENT)
+#include <image_transport/image_transport.h>
+#else
 #include <image_transport/image_transport.hpp>
+#endif
 #include "realsense2_camera_msgs/msg/imu_info.hpp"
 #include "realsense2_camera_msgs/msg/extrinsics.hpp"
 #include <librealsense2/hpp/rs_processing.hpp>
@@ -28,6 +30,7 @@
 #include <sensor_msgs/point_cloud2_iterator.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
+#include <std_srvs/srv/set_bool.hpp>
 
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
@@ -118,7 +121,7 @@ namespace realsense2_camera
     {
     public:
         BaseRealSenseNode(rclcpp::Node& node,
-                          rs2::device dev, const std::string& serial_no);
+                          rs2::device dev, std::shared_ptr<Parameters> parameters);
         ~BaseRealSenseNode();
 
     public:
@@ -147,6 +150,7 @@ namespace realsense2_camera
                 }
         };
 
+        bool _is_running;
         std::string _base_frame_id;
         std::string _odom_frame_id;
         std::map<stream_index_pair, std::string> _frame_id;
@@ -156,9 +160,12 @@ namespace realsense2_camera
         bool _align_depth;
         std::vector<rs2_option> _monitor_options;
         rclcpp::Logger _logger;
+        rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr _toggle_sensors_srv;
 
         virtual void calcAndPublishStaticTransform(const stream_index_pair& stream, const rs2::stream_profile& base_profile);
-        void publishTopics();
+        virtual bool toggleSensors(bool enabled, std::string& msg);
+        bool toggle_sensor_callback(std_srvs::srv::SetBool::Request::SharedPtr req, std_srvs::srv::SetBool::Response::SharedPtr res);
+        virtual void publishTopics();
         rs2::stream_profile getAProfile(const stream_index_pair& stream);
         tf2::Quaternion rotationMatrixToQuaternion(const float rotation[9]) const;
         void publish_static_tf(const rclcpp::Time& t,
@@ -166,7 +173,6 @@ namespace realsense2_camera
                                const tf2::Quaternion& q,
                                const std::string& from,
                                const std::string& to);
-        const rclcpp::ParameterValue declareParameter(const std::string &name, const rclcpp::ParameterValue &default_value=rclcpp::ParameterValue(), const rcl_interfaces::msg::ParameterDescriptor &parameter_descriptor=rcl_interfaces::msg::ParameterDescriptor());
         template<class T>
         void setNgetNodeParameter(T& param, const std::string& param_name, const T& default_value, const rcl_interfaces::msg::ParameterDescriptor &parameter_descriptor=rcl_interfaces::msg::ParameterDescriptor());
 
@@ -198,7 +204,6 @@ namespace realsense2_camera
         cv::Mat& fix_depth_scale(const cv::Mat& from_image, cv::Mat& to_image);
         void clip_depth(rs2::depth_frame depth_frame, float clipping_dist);
         void updateStreamCalibData(const rs2::video_stream_profile& video_profile);
-        void updateExtrinsicsCalibData(const rs2::video_stream_profile& left_video_profile, const rs2::video_stream_profile& right_video_profile);
         void SetBaseStream();
         void publishStaticTransforms();
         void publishDynamicTransforms();
@@ -215,11 +220,9 @@ namespace realsense2_camera
                           const std::map<stream_index_pair, image_transport::Publisher>& image_publishers,
                           std::map<stream_index_pair, int>& seq,
                           std::map<stream_index_pair, sensor_msgs::msg::CameraInfo>& camera_info,
-                          const std::map<stream_index_pair, std::string>& optical_frame_id,
                           const std::map<rs2_stream, std::string>& encoding);
         bool getEnabledProfile(const stream_index_pair& stream_index, rs2::stream_profile& profile);
 
-        void publishAlignedDepthToOthers(rs2::frameset frames, const rclcpp::Time& t);
         sensor_msgs::msg::Imu CreateUnitedMessage(const CimuData accel_data, const CimuData gyro_data);
 
         void FillImuData_Copy(const CimuData imu_data, std::deque<sensor_msgs::msg::Imu>& imu_msgs);
@@ -236,9 +239,12 @@ namespace realsense2_camera
 
         void registerDynamicOption(rs2::options sensor, std::string& module_name);
         void registerDynamicReconfigCb();
+        void registerHDRoptions();
+        void set_sensor_parameter_to_ros(rs2::sensor sensor, rs2_option option);
+        void monitor_update_functions();
         void registerAutoExposureROIOption(const std::string option_name, const int min_val, const int max_val, rs2::sensor sensor, int* option_value);
         void registerAutoExposureROIOptions();
-        void set_auto_exposure_roi(const std::string variable_name, rs2::sensor sensor, const std::vector<rclcpp::Parameter> & parameters);
+        void set_auto_exposure_roi(const std::string variable_name, rs2::sensor sensor, const rclcpp::Parameter& parameter);
         void set_sensor_auto_exposure_roi(rs2::sensor sensor);
         const rmw_qos_profile_t qos_string_to_qos(std::string str);
         rs2_stream rs2_string_to_stream(std::string str);
@@ -249,7 +255,6 @@ namespace realsense2_camera
         std::map<std::string, std::function<void(rs2::frame)>> _sensors_callback;
 
         std::string _json_file_path;
-        std::string _serial_no;
         float _depth_scale_meters;
         float _clipping_distance;
         bool _allow_no_texture_points;
@@ -264,6 +269,7 @@ namespace realsense2_camera
         std::map<stream_index_pair, int> _height;
         std::map<stream_index_pair, double> _fps;
         std::map<stream_index_pair, std::string> _qos;
+        std::map<stream_index_pair, std::string> _info_qos;
         std::map<rs2_stream, rs2_format>  _format;
         std::map<stream_index_pair, bool> _enable;
         std::map<rs2_stream, std::string> _stream_name;
@@ -272,7 +278,9 @@ namespace realsense2_camera
         tf2_ros::StaticTransformBroadcaster _static_tf_broadcaster;
         tf2_ros::TransformBroadcaster _dynamic_tf_broadcaster;
         std::vector<geometry_msgs::msg::TransformStamped> _static_tf_msgs;
-        std::shared_ptr<std::thread> _tf_t;
+        std::shared_ptr<std::thread> _tf_t, _update_functions_t;
+        std::vector<std::function<void()> > _update_functions_v;
+        std::condition_variable _cv_tf, _update_functions_cv;
 
         std::map<stream_index_pair, image_transport::Publisher> _image_publishers;
         
@@ -298,12 +306,14 @@ namespace realsense2_camera
         bool _pointcloud;
         bool _publish_odom_tf;
         imu_sync_method _imu_sync_method;
+        std::string _imu_qos;
         std::string _filters_str;
         stream_index_pair _pointcloud_texture;
+        std::string _pointcloud_qos;
         PipelineSyncer _syncer;
         std::vector<NamedFilter> _filters;
+        std::shared_ptr<rs2::filter> _colorizer, _pointcloud_filter;
         std::vector<rs2::sensor> _dev_sensors;
-        std::map<rs2_stream, std::shared_ptr<rs2::align>> _align;
 
         std::map<stream_index_pair, cv::Mat> _depth_aligned_image;
         std::map<stream_index_pair, cv::Mat> _depth_scaled_image;
@@ -314,6 +324,7 @@ namespace realsense2_camera
         std::map<stream_index_pair, image_transport::Publisher> _depth_aligned_image_publishers;
         std::map<stream_index_pair, rclcpp::Publisher<Extrinsics>::SharedPtr> _depth_to_other_extrinsics_publishers;
         std::map<stream_index_pair, rs2_extrinsics> _depth_to_other_extrinsics;
+        std::map<stream_index_pair, std::string> _extrinsics_qos;
         std::map<std::string, rs2::region_of_interest> _auto_exposure_roi;
         std::map<rs2_stream, bool> _is_first_frame;
         std::map<rs2_stream, std::vector<std::function<void()> > > _video_functions_stack;
@@ -322,9 +333,7 @@ namespace realsense2_camera
 
         sensor_msgs::msg::PointCloud2 _msg_pointcloud;
         std::vector< unsigned int > _valid_pc_indices;
-        std::vector<rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr> _callback_handlers;
-        std::set<std::string> _variable_names;
-
+        std::shared_ptr<Parameters> _parameters;
     };//end class
 }
 #endif //___BASE_REALSENSE_NODE_HEADER___

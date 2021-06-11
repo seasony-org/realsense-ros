@@ -2,6 +2,37 @@
 Changelog for package realsense2_camera
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.2.1 (2021-05-10)
+------------------
+* Add build dependency **ros_environment**
+* Contributors: doronhi
+
+3.2.0 (2021-05-05)
+------------------
+* Added filling correct Tx, Ty values in projection matrix of right camera.
+* Fixed frame_id of right sensor to match left sensor in a stereo pair.pair
+* Contributors: Pavlo Kolomiiets, doronhi
+
+3.1.6 (2021-05-05)
+------------------
+* Fix pointcloud message size when no texture is added.
+* migration toggle_sensors feature to ros2
+* Add option for aligning pointcloud to color image.
+* removed option to align to other streams other then color.
+* Contributors: anaelle, doronhi
+
+3.1.5 (2021-03-24)
+------------------
+* Support Eloquent and Dashing.
+* Add filter: HDR_merge
+* fix initialization of colorizer image if user specified negative image size (as is in default launch file)
+* Remove the following tests for known playback issue with librealsense2 version 2.43.0: align_depth_color_1, align_depth_ir1_1, align_depth_ir1_decimation_1.
+* Remove wrong dependency
+* changed default image QOS to SYSTEM_DEFAULT
+* Add missing librealsense2 dependency from package.xml
+* fix bug: selection of profile disregarded stream index.
+* Contributors: changseung.yu, doronhi
+
 3.1.4 (2021-02-18)
 ------------------
 * fix reading json file with device other than D400 series.
