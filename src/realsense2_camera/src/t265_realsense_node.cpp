@@ -1,11 +1,11 @@
-#include "realsense2_camera/t265_realsense_node.h"
+#include "t265_realsense_node.h"
 #include <fstream>
 
 using namespace realsense2_camera;
 
 T265RealsenseNode::T265RealsenseNode(rclcpp::Node& node,
-                                     rs2::device dev, const std::string& serial_no) : 
-                                     BaseRealSenseNode(node, dev, serial_no),
+                                     rs2::device dev, std::shared_ptr<Parameters> parameters) : 
+                                     BaseRealSenseNode(node, dev, parameters),
                                      _wo_snr(dev.first<rs2::wheel_odometer>()),
                                      _use_odom_in(false) 
                                      {
@@ -38,6 +38,12 @@ void T265RealsenseNode::initializeOdometryInput()
         throw std::runtime_error("Format error in calibration_odometry file" );
     }
     _use_odom_in = true;
+}
+
+bool T265RealsenseNode::toggleSensors(bool /*enabled*/, std::string& /*msg*/)
+{
+  ROS_WARN_STREAM("toggleSensors method not implemented for T265");
+  return false;
 }
 
 void T265RealsenseNode::publishTopics()
